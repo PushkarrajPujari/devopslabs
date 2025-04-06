@@ -1,16 +1,3 @@
-Absolutely! Here’s the **complete AsciiDoc** file combining:
-
-✅ Setting up Alpine on Play with Docker  
-✅ Installing tools  
-✅ Cloning and building the Spring PetClinic app  
-✅ Writing and using a `Dockerfile`  
-✅ Running the app in Docker  
-
----
-
-### 📘 `petclinic-alpine-docker.adoc`
-
-```asciidoc
 = Full Lab: Deploy Spring PetClinic with Docker on Alpine (Play with Docker)
 Author: MCA DevOps Workshop
 :toc:
@@ -38,7 +25,7 @@ This lab guides you to:
 
 . Visit https://labs.play-with-docker.com
 . Start a session, then click `+ ADD NEW INSTANCE`
-. Choose **Alpine** as your image
+. Choose *Alpine* as your image
 . Open the Alpine terminal
 
 == 🔧 Step 2: Install Required Tools
@@ -53,15 +40,12 @@ apk add git openjdk17 maven curl wget unzip bash
 
 [cols="1,3", options="header"]
 |===
-|Command | Description
-
-| `apk update` | Updates the Alpine package list
-| `apk add ...` | Installs Git, Java 17, Maven, Curl, etc.
+| Command | Description
+| apk update | Updates the Alpine package list
+| apk add ... | Installs Git, Java 17, Maven, Curl, etc.
 |===
 
 == ✅ Step 3: Verify Installations
-
-Run the following commands to ensure all tools are available:
 
 [source,bash]
 ----
@@ -91,8 +75,9 @@ mvn clean package -DskipTests
 
 [cols="1,3", options="header"]
 |===
-| `mvn clean` | Clears previously compiled files
-| `mvn package -DskipTests` | Builds a JAR file, skipping unit tests
+| Command | Description
+| mvn clean | Clears previously compiled files
+| mvn package -DskipTests | Builds a JAR file, skipping unit tests
 |===
 
 == 📂 Step 6: Verify the JAR File
@@ -104,9 +89,10 @@ ls target/
 
 You should see a file like:
 
-```
+[source]
+----
 spring-petclinic-3.1.0-SNAPSHOT.jar
-```
+----
 
 == 📦 Step 7: Create a Dockerfile
 
@@ -124,12 +110,11 @@ CMD ["java", "-jar", "app.jar"]
 
 [cols="1,3", options="header"]
 |===
-|Line | Description
-
-| `FROM openjdk:17` | Base image with Java 17 runtime
-| `COPY target/... app.jar` | Copies the built JAR into the container
-| `EXPOSE 8080` | Exposes port 8080 for external access
-| `CMD [...]` | Starts the application using Java
+| Line | Description
+| FROM openjdk:17 | Base image with Java 17 runtime
+| COPY target/... app.jar | Copies the built JAR into the container
+| EXPOSE 8080 | Exposes port 8080 for external access
+| CMD [...] | Starts the application using Java
 |===
 
 == 🏗️ Step 8: Build the Docker Image
@@ -141,8 +126,12 @@ docker build -t petclinic-app .
 
 === Explanation
 
-- `-t petclinic-app` = tag the image
-- `.` = use current directory (where the Dockerfile is)
+[cols="1,3", options="header"]
+|===
+| Option | Description
+| -t petclinic-app | Tags the image as "petclinic-app"
+| . | Specifies current directory as build context (must contain Dockerfile)
+|===
 
 == 🚀 Step 9: Run the PetClinic Container
 
@@ -155,21 +144,23 @@ docker run -d -p 8080:8080 --name petclinic petclinic-app
 
 [cols="1,3", options="header"]
 |===
-| `-d` | Detached mode (runs in background)
-| `-p 8080:8080` | Maps host port 8080 to container port 8080
-| `--name petclinic` | Assigns a name to the container
-| `petclinic-app` | Image name to run
+| Option | Description
+| -d | Detached mode (runs in background)
+| -p 8080:8080 | Maps host port 8080 to container port 8080
+| --name petclinic | Assigns a name to the container
+| petclinic-app | Name of the Docker image to run
 |===
 
 == 🔍 Step 10: Test It
 
 In your browser, open:
 
-```
+[source]
+----
 http://<node-public-ip>:8080
-```
+----
 
-(Use the public IP provided by Play with Docker for your Alpine node.)
+Use the public IP provided by Play with Docker for your Alpine node.
 
 == 🧼 Cleanup (Optional)
 
@@ -192,9 +183,3 @@ Check out the follow-up lab to automate this using Ansible to:
 - Build the app on one node
 - Transfer to a second node
 - Deploy with Docker remotely
-
-```
-
----
-
-Let me know if you'd like the **Ansible automation version** to go along with this or need it as a downloadable `.adoc` file!
