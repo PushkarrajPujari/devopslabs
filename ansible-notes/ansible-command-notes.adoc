@@ -121,13 +121,16 @@ ansible-doc file
 
 === 📝 Summary Table of Flags
 
-| Flag        | Description                              |
-|-------------|------------------------------------------|
-| `-i`        | Specify the inventory file               |
-| `-m`        | Specify the module to run                |
-| `-a`        | Provide arguments to the module          |
-| `--check`   | Dry-run mode (show what would change)    |
-| `-v`/`-vvv` | Increase verbosity for debugging          |
+[cols="1,3", options="header"]
+|===
+| Flag        | Description
+| `-i`        | Specify the inventory file
+| `-m`        | Specify the module to run
+| `-a`        | Provide arguments to the module
+| `--check`   | Dry-run mode (show what would change)
+| `-v`/`-vvv` | Increase verbosity for debugging
+|===
+
 
 ---
 
