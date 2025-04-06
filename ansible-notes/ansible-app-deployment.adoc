@@ -1,0 +1,130 @@
+= Full Lab: Deploy Spring PetClinic with Docker on Alpine (Play with Docker)
+Author: MCA DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: pygments
+:sectnums:
+
+== 🎯 Objective
+
+This lab guides you to:
+- Configure an Alpine Linux environment on Play with Docker (PWD)
+- Install Java 17, Maven, Git
+- Clone and build the Spring PetClinic app
+- Create a Dockerfile
+- Build and run the app in a Docker container
+- Automate the deployment using Ansible
+
+== 🧪 Environment
+
+- Platform: https://labs.play-with-docker.com
+- Alpine Linux instances (2 nodes)
+- Internet access inside container (provided by PWD)
+- Docker is pre-installed in the PWD instance
+
+== 🐧 Step 1: Launch Alpine on Play with Docker
+
+. Visit https://labs.play-with-docker.com
+. Start a session, then click `+ ADD NEW INSTANCE` twice to create two instances
+. Choose *Alpine* as your image
+. Identify one as the control node and one as the managed node
+
+== 🔧 Step 2: Install Required Tools (on Control Node)
+
+[source,bash]
+----
+apk update
+apk add git openjdk17 maven curl wget unzip bash ansible
+----
+
+== ⚙️ Step 3: Prepare PetClinic App
+
+[source,bash]
+----
+git clone https://github.com/spring-projects/spring-petclinic.git
+cd spring-petclinic
+mvn clean package -DskipTests
+----
+
+== 📂 Step 4: Create Dockerfile
+
+[source,bash]
+----
+cat <<EOF > Dockerfile
+FROM openjdk:17
+COPY spring-petclinic-3.1.0-SNAPSHOT.jar app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+EOF
+----
+
+== 🤖 Step 5: Create Ansible Inventory File
+
+[source,bash]
+----
+echo '[web]
+192.168.0.12 ansible_user=root ansible_ssh_common_args="-o StrictHostKeyChecking=no"' > inventory
+----
+
+Replace `192.168.0.12` with your second node’s IP address.
+
+== 📜 Step 6: Create Ansible Playbook
+
+Create a file `deploy_petclinic.yml`:
+
+[source,yaml]
+----
+- name: Deploy PetClinic on Node 2 using Docker
+  hosts: web
+  become: true
+  tasks:
+    - name: Ensure destination directory exists
+      ansible.builtin.file:
+        path: /root/petclinic
+        state: directory
+
+    - name: Copy JAR file
+      ansible.builtin.copy:
+        src: ./spring-petclinic/target/spring-petclinic-3.1.0-SNAPSHOT.jar
+        dest: /root/petclinic/spring-petclinic-3.1.0-SNAPSHOT.jar
+
+    - name: Copy Dockerfile
+      ansible.builtin.copy:
+        src: ./spring-petclinic/Dockerfile
+        dest: /root/petclinic/Dockerfile
+
+    - name: Build Docker image
+      ansible.builtin.shell:
+        cmd: docker build -t petclinic-app .
+        chdir: /root/petclinic
+
+    - name: Run Docker container
+      ansible.builtin.shell:
+        cmd: docker run -d -p 8080:8080 --name petclinic petclinic-app
+----
+
+== 🚀 Step 7: Run the Playbook
+
+[source,bash]
+----
+ansible-playbook -i inventory deploy_petclinic.yml
+----
+
+== ✅ Step 8: Test the Deployment
+
+Visit:
+[source]
+----
+http://<node2-ip>:8080
+----
+
+== 🧼 Cleanup
+
+[source,bash]
+----
+docker rm -f petclinic
+----
+
+== 📌 Summary
+
+You have now automated the deployment of a Spring Boot app using Ansible and Docker on remote Alpine Linux nodes in Play with Docker!
