@@ -1,34 +1,35 @@
-╔════════════════════════════════════════════════════════════════════╗
-║       🧪 DOCKER PRACTICAL: NODE.JS APP CONTAINERIZATION           ║
-╚════════════════════════════════════════════════════════════════════╝
+= 🧪 Docker Practical: Node.js App Containerization
 
-🎯 OBJECTIVE:
-Containerize a basic Node.js web server using Docker and perform
-core Docker operations like build, run, exec, logs, copy, stop, remove.
+🎯 **Objective**: Containerize a basic Node.js web server using Docker and perform core Docker operations like build, run, exec, logs, copy, stop, remove.
 
-╔════════════════════════════════════════════════════════════════════╗
-║ STEP 1: PROJECT STRUCTURE                                         ║
-╠════════════════════════════════════════════════════════════════════╣
-║ docker-node-app/                                                  ║
-║ ├── app.js                                                        ║
-║ └── Dockerfile                                                    ║
-╚════════════════════════════════════════════════════════════════════╝
+== 📁 Project Structure
 
-📄 app.js
-─────────────────────────────────────────────────────────────────────
+[source]
+----
+docker-node-app/
+├── app.js
+└── Dockerfile
+----
+
+== 📄 app.js
+
+[source,js]
+----
 const http = require('http');
 const PORT = 3000;
 
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello from Dockerized Node.js App!\\n');
+  res.end('Hello from Dockerized Node.js App!\n');
 }).listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });
-─────────────────────────────────────────────────────────────────────
+----
 
-📄 Dockerfile
-─────────────────────────────────────────────────────────────────────
+== 📄 Dockerfile
+
+[source,dockerfile]
+----
 FROM node:18
 
 WORKDIR /usr/src/app
@@ -36,46 +37,35 @@ COPY app.js .
 
 EXPOSE 3000
 CMD ["node", "app.js"]
-─────────────────────────────────────────────────────────────────────
+----
 
-╔════════════════════════════════════════════════════════════════════╗
-║ STEP 2: DOCKER COMMANDS (USE THESE IN TERMINAL)                    ║
-╠════════════════════════════════════════════════════════════════════╣
-║ 📦 Build Docker Image                                              ║
-║   docker build -t node-docker-app .                                ║
-║                                                                   
-║ 🚀 Run the Container                                              ║
-║   docker run -d -p 3000:3000 --name my-node-app node-docker-app   ║
-║                                                                   
-║ 📋 List Running Containers                                        ║
-║   docker ps                                                       ║
-║                                                                   
-║ 🔍 View Logs                                                      ║
-║   docker logs my-node-app                                        ║
-║                                                                   
-║ 🔧 Enter Container Shell                                          ║
-║   docker exec -it my-node-app bash                                ║
-║                                                                   
-║ 📤 Copy File from Container                                       ║
-║   docker cp my-node-app:/usr/src/app/app.js ./copied-app.js       ║
-║                                                                   
-║ 🛑 Stop and Remove Container                                      ║
-║   docker stop my-node-app                                         ║
-║   docker rm my-node-app                                           ║
-║                                                                   
-║ 🧹 Remove Docker Image                                            ║
-║   docker rmi node-docker-app                                      ║
-║                                                                   
-║ 🧽 Clean Up All Unused Stuff                                       ║
-║   docker system prune -f                                           ║
-╚════════════════════════════════════════════════════════════════════╝
+== 🧪 Docker Commands
 
-🌐 TEST YOUR APP:
-─────────────────────────────────────────────────────────────────────
-Open browser and go to: http://localhost:3000
+[cols="1,3"]
+|===
+| Command | Description
+
+| `docker build -t node-docker-app .` | Build Docker image from Dockerfile
+| `docker run -d -p 3000:3000 --name my-node-app node-docker-app` | Run container in detached mode
+| `docker ps` | List running containers
+| `docker logs my-node-app` | View logs of the container
+| `docker exec -it my-node-app bash` | Access container shell
+| `docker cp my-node-app:/usr/src/app/app.js ./copied-app.js` | Copy file from container to host
+| `docker stop my-node-app` | Stop the container
+| `docker rm my-node-app` | Remove the container
+| `docker rmi node-docker-app` | Remove the image
+| `docker system prune -f` | Clean up all unused Docker objects
+|===
+
+== 🌐 Test Your App
+
+Open your browser and go to: `http://localhost:3000`
 
 Expected Output:
-  Hello from Dockerized Node.js App!
-─────────────────────────────────────────────────────────────────────
+[source]
+----
+Hello from Dockerized Node.js App!
+----
 
-🎉 YOU'VE CONTAINERIZED A NODE.JS APP AND MASTERED BASIC DOCKER COMMANDS!
+🎉 **You've containerized a Node.js app and practiced essential Docker commands!**
+
