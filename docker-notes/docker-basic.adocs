@@ -1,133 +1,147 @@
-╔════════════════════════════════════════════════════════════════════╗
-║                 🐳 DOCKER COMMANDS EXPLAINED IN ASCII             ║
-║                A Beginner-Friendly Docker Cheatsheet              ║
-╚════════════════════════════════════════════════════════════════════╝
+= 🐳 Docker Commands Explained in ASCII
+A Beginner-Friendly Docker Cheatsheet
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🚀 BASIC DOCKER TERMINOLOGY                                       ║
-╠════════════════════════════════════════════════════════════════════╣
-║ 🧱 IMAGE    → Read-only template to create containers (like OS)    ║
-║ 📦 CONTAINER → Running instance of an image                        ║
-║ 📚 VOLUME   → Persistent data storage that lives outside container ║
-║ 🌐 NETWORK  → Communication layer between containers               ║
-╚════════════════════════════════════════════════════════════════════╝
+== 🚀 Basic Docker Terminology
 
+[cols="1,3",options="header"]
+|===
+| Term | Description
+| 🧱 IMAGE     | Read-only template to create containers (like OS)
+| 📦 CONTAINER | Running instance of an image
+| 📚 VOLUME    | Persistent data storage that lives outside container
+| 🌐 NETWORK   | Communication layer between containers
+|===
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🔧 docker run FLAGS AND OPTIONS                                   ║
-╠════════════════════════════════════════════════════════════════════╣
-║ ▶ docker run [OPTIONS] IMAGE [COMMAND]                            ║
-╚════════════════════════════════════════════════════════════════════╝
+== 🔧 `docker run` Flags and Options
 
-🧩 COMMONLY USED FLAGS:
+*General Syntax:*  
+`docker run [OPTIONS] IMAGE [COMMAND]`
 
-╔════════════════════════════════════════════════════════════════════╗
-║ -d                                                                 ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Detached mode: Runs the container in the background.               ║
-║ You won’t see logs unless you check with: `docker logs`           ║
-║                                                                   ║
-║ ➤ Example:                                                        ║
-║   docker run -d nginx                                             ║
-╚════════════════════════════════════════════════════════════════════╝
+=== -d : Detached Mode
 
-╔════════════════════════════════════════════════════════════════════╗
-║ -p <hostPort>:<containerPort>                                     ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Port mapping: Links a port on your host to a port inside the       ║
-║ container. Required to access web services inside containers.      ║
-║                                                                   ║
-║ ➤ Example:                                                        ║
-║   docker run -p 8080:80 nginx                                     ║
-║   # Access Nginx on localhost:8080                                ║
-╚════════════════════════════════════════════════════════════════════╝
+*Description:*  
+Runs the container in the background.  
+You won’t see logs unless you check with:
 
-╔════════════════════════════════════════════════════════════════════╗
-║ -v <volumeName>:<containerPath>                                   ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Volume mount: Attaches persistent storage to container.            ║
-║ Useful for storing data that survives container deletion.          ║
-║                                                                   ║
-║ ➤ Example:                                                        ║
-║   docker run -v mydata:/data busybox                              ║
-╚════════════════════════════════════════════════════════════════════╝
+`docker logs <container_id>`
 
-╔════════════════════════════════════════════════════════════════════╗
-║ -it                                                               ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Interactive + TTY: Opens a shell inside the container so you can  ║
-║ run commands like you do in a terminal.                           ║
-║                                                                   ║
-║ ➤ Example:                                                        ║
-║   docker run -it ubuntu bash                                      ║
-╚════════════════════════════════════════════════════════════════════╝
+*Example:*
+```
+docker run -d nginx
+```
 
+=== -p : Port Mapping
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 📦 docker build                                                   ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Builds an image from a Dockerfile                                 ║
-║                                                                   ║
-║ ➤ Syntax:                                                         ║
-║   docker build -t <name> .                                        ║
-╚════════════════════════════════════════════════════════════════════╝
+*Syntax:*  
+`-p <hostPort>:<containerPort>`
 
+*Description:*  
+Maps a host port to a container port.  
+Required to access web services running inside containers.
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 📜 docker ps                                                      ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Lists running containers                                          ║
-║                                                                   ║
-║ ➤ Add `-a` to see all containers (stopped + running):             ║
-║   docker ps -a                                                    ║
-╚════════════════════════════════════════════════════════════════════╝
+*Example:*
+```
+docker run -p 8080:80 nginx
+# Access Nginx via localhost:8080
+```
 
+=== -v : Volume Mount
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🛑 docker stop <container>                                        ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Stops a running container gracefully                              ║
-╚════════════════════════════════════════════════════════════════════╝
+*Syntax:*  
+`-v <volumeName>:<containerPath>`
 
+*Description:*  
+Mounts a volume for persistent storage that survives container deletion.
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🗑 docker rm <container>                                           ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Removes a stopped container                                       ║
-╚════════════════════════════════════════════════════════════════════╝
+*Example:*
+```
+docker run -v mydata:/data busybox
+```
 
+=== -it : Interactive + TTY
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🧽 docker system prune -f                                         ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Cleans up unused containers, images, volumes, and networks         ║
-╚════════════════════════════════════════════════════════════════════╝
+*Description:*  
+Opens a shell inside the container so you can interact like a terminal.
 
+*Example:*
+```
+docker run -it ubuntu bash
+```
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 📝 BONUS TIP: NAMING CONTAINERS                                   ║
-╠════════════════════════════════════════════════════════════════════╣
-║ Use `--name` to assign a readable name instead of random ID        ║
-║                                                                   ║
-║ ➤ Example:                                                        ║
-║   docker run --name myweb -d -p 8080:80 nginx                     ║
-╚════════════════════════════════════════════════════════════════════╝
+== 📦 docker build
 
+*Description:*  
+Builds a custom image from a Dockerfile.
 
-╔════════════════════════════════════════════════════════════════════╗
-║ 🧠 REMEMBER                                                       ║
-╠════════════════════════════════════════════════════════════════════╣
-║ - Images = Blueprints (read-only)                                 ║
-║ - Containers = Live instances                                     ║
-║ - Volumes = Persistent storage                                    ║
-║ - Networks = Container communication layer                        ║
-╚════════════════════════════════════════════════════════════════════╝
+*Syntax:*
+```
+docker build -t <image-name> .
+```
 
-🎉 YOU NOW KNOW:
-✔ What detached mode is
-✔ What port mapping does
-✔ How to attach volumes
-✔ How to run, build, and manage containers
+== 📜 docker ps
 
-🧾 PRACTICE TIP:
-Type `docker --help` or `docker run --help` for all options!
+*Description:*  
+Lists running containers.
+
+*Add `-a` to show all containers (stopped + running):*
+```
+docker ps -a
+```
+
+== 👏 docker stop
+
+*Description:*  
+Stops a running container gracefully.
+
+*Syntax:*
+```
+docker stop <container>
+```
+
+== 🗑 docker rm
+
+*Description:*  
+Removes a stopped container.
+
+*Syntax:*
+```
+docker rm <container>
+```
+
+== 🧽 docker system prune
+
+*Description:*  
+Removes unused containers, images, volumes, and networks.
+
+*Syntax:*
+```
+docker system prune -f
+```
+
+== 📝 BONUS TIP: Naming Containers
+
+Use `--name` to give a friendly name to a container.
+
+*Example:*
+```
+docker run --name myweb -d -p 8080:80 nginx
+```
+
+== 🧠 REMEMBER
+
+- **Images** = Blueprints (read-only)
+- **Containers** = Live instances of images
+- **Volumes** = Persistent storage
+- **Networks** = Container communication
+
+== ✅ YOU NOW KNOW
+
+- What detached mode is
+- What port mapping does
+- How to attach volumes
+- How to run, build, and manage containers
+
+== 🧾 Practice Tip
+
+Use `docker --help` or `docker run --help` to explore all options!
+
