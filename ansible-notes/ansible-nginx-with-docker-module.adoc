@@ -1,0 +1,143 @@
+= 🚀 Ansible + Docker: Deploy Nginx (Play with Docker Lab)
+DevOps Workshop for MCA Students
+:toc:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums:
+
+== 🎯 Objective
+
+Use Ansible to automate the deployment of an Nginx container using Docker on a remote node inside the Play with Docker (PWD) platform.
+
+== 🧱 Setup Environment on Play with Docker
+
+1. Go to https://labs.play-with-docker.com
+2. Click "Start" and add **two Alpine instances**:
+   - `node1`: Ansible Controller
+   - `node2`: Managed Node (Docker host)
+3. Copy the IP address of `node2` — you will use it in the inventory file.
+
+== ⚙️ Step 1: Install Ansible on Controller Node (node1)
+
+[source,bash]
+----
+apk update
+apk add --no-cache ansible py3-pip
+python3 -m venv venv
+source venv/bin/activate
+pip install docker
+ansible-galaxy collection install community.docker
+----
+
+[cols="1,3"]
+|===
+| `apk update`              | Update Alpine package index
+| `apk add ansible`         | Install Ansible
+| `pip install docker`      | Install Python Docker SDK (required for Docker modules)
+| `ansible-galaxy collection install community.docker` | Install official Docker modules
+|===
+
+== 🗂️ Step 2: Create Inventory File
+
+[source,bash]
+----
+echo "[web]" > hosts
+echo "192.168.0.21 ansible_user=root" >> hosts
+----
+
+[cols="1,3"]
+|===
+| `[web]`                  | Group of target machines
+| `192.168.0.21`           | IP address of node2 (replace with your actual IP)
+| `ansible_user=root`      | Ansible will SSH as the root user
+|===
+
+== 📜 Step 3: Create Ansible Playbook
+
+Create a file named `nginx_docker.yml`.
+
+[source,yaml]
+----
+- name: Run Nginx on Docker using Ansible (PWD)
+  hosts: web
+  become: true
+  collections:
+    - community.docker
+
+  tasks:
+    - name: Pull Nginx image
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+
+    - name: Run Nginx container
+      community.docker.docker_container:
+        name: nginx-server
+        image: nginx
+        state: started
+        ports:
+          - "8080:80"
+----
+
+=== 🔍 Explanation
+
+[cols="1,3"]
+|===
+| `hosts: web`                    | Targets all hosts in the `[web]` group
+| `become: true`                  | Uses sudo for root privileges
+| `docker_image` module           | Pulls the nginx image if not present
+| `docker_container` module       | Starts a container from the nginx image
+| `"8080:80"`                     | Maps port 8080 on the host to 80 inside the container
+|===
+
+== ▶️ Step 4: Run the Playbook
+
+[source,bash]
+----
+ansible-playbook -i hosts nginx_docker.yml
+----
+
+=== 🔍 Command Breakdown
+
+[cols="1,3"]
+|===
+| `ansible-playbook`         | Command to run a YAML-based playbook
+| `-i hosts`                 | Specifies the inventory file to use
+| `nginx_docker.yml`         | Playbook file to execute
+|===
+
+== ✅ Step 5: Test the Setup
+
+Open a browser and visit:
+
+[source,text]
+----
+http://<node2-ip>:8080
+----
+
+You should see the default **Nginx Welcome Page**.
+
+== 🧪 Bonus: Check Running Containers on Node2
+
+SSH into node2 and run:
+
+[source,bash]
+----
+docker ps
+----
+
+You’ll see a running container named `nginx-server`.
+
+== 📝 Summary
+
+- You used **Ansible** to automate the Docker workflow.
+- Nginx is running inside a **Docker container** on a managed host.
+- All steps were tested on **Play with Docker (PWD)** using Alpine instances.
+
+== 🔗 Further Reading
+
+- Ansible Docs: https://docs.ansible.com/
+- Docker Collection: https://docs.ansible.com/ansible/latest/collections/community/docker/
+- Play with Docker: https://labs.play-with-docker.com
+
+

@@ -1,0 +1,161 @@
+= 📘 Ansible Cheat Sheet
+Author: DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums:
+
+== 🔰 What is Ansible?
+
+Ansible is an open-source automation tool used for:
+- Configuration management
+- Application deployment
+- Task automation
+
+It uses **YAML** to define automation tasks (called *playbooks*) and works over **SSH**—no agent required.
+
+== 🧰 Basic Terminology
+
+| Term         | Meaning                                         |
+|--------------|--------------------------------------------------|
+| Inventory    | A list of managed hosts                         |
+| Module       | The units of work executed by Ansible           |
+| Ad-hoc       | One-line command for quick tasks                |
+| Playbook     | A YAML file describing a set of tasks           |
+| Role         | A structured way of organizing playbooks        |
+| Facts        | Information collected about a system            |
+
+== 📂 Inventory File Example
+
+[source,ini]
+----
+[web]
+192.168.0.21 ansible_user=root
+
+[db]
+192.168.0.22 ansible_user=root
+----
+
+== ⚡ Ad-Hoc Commands
+
+=== Ping all hosts
+
+[source,bash]
+----
+ansible all -i hosts -m ping
+----
+
+➡️ Uses the `ping` module to test SSH connectivity.
+
+=== Run shell command
+
+[source,bash]
+----
+ansible all -i hosts -m shell -a "uptime"
+----
+
+➡️ Runs a shell command on all inventory hosts.
+
+=== Create a file
+
+[source,bash]
+----
+ansible web -i hosts -m file -a "path=/tmp/test.txt state=touch"
+----
+
+➡️ Creates a new file on all `web` hosts.
+
+=== Install a package (if supported by system)
+
+[source,bash]
+----
+ansible web -i hosts -m package -a "name=tree state=present"
+----
+
+➡️ Installs the `tree` package if available.
+
+== 📜 Playbook Structure
+
+[source,yaml]
+----
+- name: Example Playbook
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Ensure nginx is installed
+      package:
+        name: nginx
+        state: present
+
+    - name: Start nginx service
+      service:
+        name: nginx
+        state: started
+----
+
+== 📦 Common Modules
+
+| Module       | Description                           |
+|--------------|----------------------------------------|
+| `ping`       | Test connectivity                     |
+| `copy`       | Copy a file to remote host            |
+| `file`       | Create/delete files or directories    |
+| `package`    | Install or remove software packages   |
+| `service`    | Manage system services                |
+| `user`       | Manage user accounts                  |
+| `debug`      | Print variables/debug messages        |
+| `setup`      | Gather facts about the system         |
+
+== 🛠️ Useful Options
+
+| Option            | Purpose                             |
+|-------------------|-------------------------------------|
+| `-i hosts`        | Specify inventory file              |
+| `-m <module>`     | Use a specific module               |
+| `-a <args>`       | Pass arguments to module            |
+| `--check`         | Dry-run mode                        |
+| `-v / -vvv`       | Verbose output                      |
+
+== 📁 Example: Docker + Nginx Playbook
+
+[source,yaml]
+----
+- name: Run Nginx in Docker
+  hosts: web
+  become: true
+  collections:
+    - community.docker
+
+  tasks:
+    - name: Pull Nginx image
+      community.docker.docker_image:
+        name: nginx
+        source: pull
+
+    - name: Start Nginx container
+      community.docker.docker_container:
+        name: nginx-server
+        image: nginx
+        state: started
+        ports:
+          - "8080:80"
+----
+
+== 🎯 Tips
+
+- Use `ansible-doc <module>` to get help on any module
+- Always test with `--check` before applying real changes
+- Use `tags` in playbooks to selectively run tasks
+- Use `handlers` for restarting services only when needed
+
+== 🔗 Resources
+
+- Ansible Docs: https://docs.ansible.com/
+- Module Index: https://docs.ansible.com/ansible/latest/collections/
+
+---
+
+👏 That's it! Use this cheat sheet during practicals or workshops for a quick reference!
+
+

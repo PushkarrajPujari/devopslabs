@@ -1,0 +1,121 @@
+= Ansible Lab: Deploying Nginx using Docker (Play with Docker Compatible)
+Author: MCA Practical Lab Guide
+:toc:
+:icons: font
+:source-highlighter: pygments
+:listing-caption: Code
+:sectnums:
+
+== Objective
+
+Learn how to use Ansible to deploy an Nginx container on a managed node using the `ansible.builtin.command` module. This approach avoids Python Docker SDK dependencies and works well in minimal environments like Play with Docker.
+
+== Lab Environment
+
+- Platform: Play with Docker (https://labs.play-with-docker.com)
+- Nodes:
+  - node1: Ansible Controller
+  - node2: Managed Host
+
+== Step 1: Set Up the Inventory File
+
+On `node1`, create a file called `hosts` with the following content:
+
+[source,ini]
+----
+[web]
+192.168.0.12 ansible_user=root
+----
+
+[NOTE]
+====
+Replace `192.168.0.12` with your actual `node2` IP address shown in the PWD terminal.
+====
+
+== Step 2: Create the Ansible Playbook
+
+On `node1`, create a file called `nginx_docker.yml`:
+
+[source,yaml]
+----
+- name: Run Nginx via Docker using shell command
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Pull Nginx image
+      ansible.builtin.command: docker pull nginx
+
+    - name: Run Nginx container
+      ansible.builtin.command: docker run -d -p 8080:80 --name nginx-server nginx
+----
+
+=== 🔍 Playbook Breakdown
+
+[cols="1,3", options="header"]
+|===
+|Line | Description
+
+| `- name: Run Nginx...` | Describes the playbook's purpose.
+| `hosts: web` | Targets the `web` group defined in the inventory.
+| `become: true` | Elevates privilege to `root` to run Docker commands.
+| `ansible.builtin.command` | Ansible module to run shell commands directly on the managed node.
+| `docker pull nginx` | Downloads the official Nginx image from Docker Hub to the managed node.
+| `docker run -d -p 8080:80 --name nginx-server nginx` | Launches an Nginx container in detached mode, maps container port 80 to host port 8080, and names it `nginx-server`.
+|===
+
+== Step 3: Run the Playbook
+
+From `node1`, execute:
+
+[source,bash]
+----
+ansible-playbook -i hosts nginx_docker.yml
+----
+
+This command tells Ansible to use the `hosts` file and execute the tasks in the `nginx_docker.yml` playbook.
+
+== Step 4: Verify the Deployment
+
+Open your browser and navigate to:
+
+[source,text]
+----
+http://<node2-public-ip>:8080
+----
+
+You should see the default Nginx welcome page. Replace `<node2-public-ip>` with your actual IP.
+
+== Step 5: Clean Up (Optional)
+
+To stop and remove the container from `node2`:
+
+[source,bash]
+----
+docker rm -f nginx-server
+----
+
+== Summary of Key Commands and Their Meanings
+
+[cols="1,3", options="header"]
+|===
+|Command | Explanation
+
+| `ansible-playbook` | CLI tool to run Ansible playbooks.
+| `-i hosts` | Specifies the inventory file to use.
+| `become: true` | Ensures tasks are run with elevated privileges.
+| `ansible.builtin.command` | Runs shell-level commands on the target host.
+| `docker pull nginx` | Pulls the latest Nginx image to the target system.
+| `docker run -d -p 8080:80 --name nginx-server nginx` | Runs Nginx container in detached mode, maps ports, and assigns a name.
+| `docker rm -f nginx-server` | Forcefully stops and deletes the container.
+|===
+
+== Troubleshooting Tips
+
+- If Docker commands fail, ensure Docker is installed and running on `node2`.
+- If playbook fails to connect, check the IP and SSH access.
+- If Nginx doesn't appear in the browser, verify the port mapping and firewall settings.
+
+
+
+

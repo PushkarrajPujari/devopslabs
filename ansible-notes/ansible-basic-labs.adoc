@@ -1,0 +1,154 @@
+= 🛠️ Ansible Practical Lab for MCA Students
+Author: DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums:
+
+== 🎯 Objective
+
+This lab introduces the basics of Ansible automation. By the end of this practical, MCA students will be able to:
+
+- Understand how Ansible works
+- Run ad-hoc commands
+- Create and execute simple playbooks
+- Manage inventory files and use core modules like `ping`, `copy`, `file`, and `package`
+
+== 🧩 Lab Setup
+
+You will need:
+
+- 1 Ansible controller node (e.g., `node1`)
+- 1 or more managed nodes (e.g., `node2`, `node3`)
+- All systems should be Linux (Alpine/Ubuntu/CentOS)
+
+TIP: Use https://labs.play-with-docker.com to spin up 2–3 Alpine instances. SSH access is preconfigured.
+
+== 🔧 Step 1: Install Ansible on the Controller Node
+
+[source,bash]
+----
+apk update
+apk add --no-cache ansible openssh
+----
+
+== 📁 Step 2: Create Inventory File
+
+[source,bash]
+----
+echo "[web]" > hosts
+echo "192.168.0.21 ansible_user=root" >> hosts
+echo "192.168.0.22 ansible_user=root" >> hosts
+----
+
+Replace the IPs with your managed node IPs.
+
+== ⚡ Lab 1: Ad-Hoc Commands
+
+=== 🔹 1.1 Test Connection Using Ping Module
+
+[source,bash]
+----
+ansible -i hosts web -m ping
+----
+
+=== 🔹 1.2 Check Uptime
+
+[source,bash]
+----
+ansible -i hosts web -m shell -a "uptime"
+----
+
+=== 🔹 1.3 Check Disk Usage
+
+[source,bash]
+----
+ansible -i hosts web -m shell -a "df -h"
+----
+
+=== 🔹 1.4 Create a File Remotely
+
+[source,bash]
+----
+ansible -i hosts web -m file -a "path=/tmp/mca.txt state=touch"
+----
+
+=== 🔹 1.5 Install Package (Optional)
+
+(Use only if the system supports `apt` or `yum`)
+
+[source,bash]
+----
+ansible -i hosts web -m package -a "name=tree state=present"
+----
+
+== 📜 Lab 2: Writing and Running a Playbook
+
+=== 🔹 2.1 Create the Playbook File
+
+Create a file named `mca_demo.yml`:
+
+[source,yaml]
+----
+- name: MCA Ansible Playbook Demo
+  hosts: web
+  tasks:
+    - name: Create a welcome file
+      copy:
+        content: "Welcome MCA Students to Ansible Lab!\n"
+        dest: /tmp/welcome.txt
+
+    - name: Ensure a directory exists
+      file:
+        path: /opt/mca-lab
+        state: directory
+
+    - name: Install tree (optional)
+      package:
+        name: tree
+        state: present
+----
+
+=== 🔹 2.2 Run the Playbook
+
+[source,bash]
+----
+ansible-playbook -i hosts mca_demo.yml
+----
+
+=== 🔹 2.3 Verify the Changes
+
+Log in to any managed node and run:
+
+[source,bash]
+----
+cat /tmp/welcome.txt
+ls -l /opt/mca-lab
+tree /opt
+----
+
+== 🧠 Viva / Review Questions
+
+1. What is the role of the inventory file in Ansible?
+2. What is an ad-hoc command? Give one example.
+3. How is a playbook different from an ad-hoc command?
+4. Name three commonly used Ansible modules.
+5. How can you ensure a directory exists on a remote system using Ansible?
+
+== ✅ Expected Outcomes
+
+After completing this lab, students will:
+
+- Understand how Ansible communicates over SSH
+- Use ad-hoc commands to perform basic automation
+- Create and run a simple playbook with common modules
+- Be confident using Ansible for small automation tasks
+
+== 📎 Additional Tips
+
+- Use `--check` with playbooks to run in dry-run mode
+- Use `-v` or `-vvv` for more verbose output
+- Learn more modules at https://docs.ansible.com/
+
+🎉 Congratulations on completing your first Ansible lab!
+
