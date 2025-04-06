@@ -1,0 +1,161 @@
+= Jenkins CI/CD Lab on Play with Docker (Single Instance)
+:author: DevOps Lab
+:revdate: 2025-04-07
+:icons: font
+:toc: left
+:toclevels: 2
+
+== Objective
+
+In this lab, you'll learn how to:
+
+- Set up Jenkins in a Docker container
+- Pull source code from GitHub
+- Build a Docker image for a Flask app
+- Run the app container (deploy it)
+- All within a single instance using Play with Docker
+
+== Prerequisites
+
+- Docker Hub account (for Play with Docker)
+- GitHub account
+- Basic understanding of Git, Docker, and Jenkins
+
+== Step 1: Start Jenkins on Play with Docker
+
+Go to https://labs.play-with-docker.com/ and click **Start**. Once in, create a new instance.
+
+Run the following commands:
+
+[source, bash]
+----
+docker volume create jenkins-data
+
+docker run -d \
+  -p 8080:8080 -p 50000:50000 \
+  -v jenkins-data:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name jenkins \
+  jenkins/jenkins:lts
+----
+
+Open port `8080` and wait for Jenkins to start.
+
+Unlock Jenkins:
+
+[source, bash]
+----
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+----
+
+== Step 2: Configure Jenkins
+
+. Open Jenkins in the browser (port 8080).
+. Paste the initial admin password.
+. Install **Suggested Plugins**.
+. Create your admin user and proceed to the dashboard.
+
+== Step 3: Install Required Plugins
+
+From **Manage Jenkins > Plugins**, install:
+
+- Git
+- Pipeline
+- Docker Pipeline
+
+== Step 4: Use a Sample Flask App from GitHub
+
+Use this ready-made Flask app repo:
+
+GitHub: https://github.com/bobbyiliev/python-flask-app
+
+Project structure:
+
+[source, bash]
+----
+.
+├── app.py
+├── requirements.txt
+└── Dockerfile
+----
+
+Example `Dockerfile`:
+
+[source, dockerfile]
+----
+FROM python:3.9-slim
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY . .
+
+CMD ["python", "app.py"]
+----
+
+== Step 5: Create Jenkins Pipeline Project
+
+. Go to Jenkins Dashboard → New Item
+. Name it `Flask-CI-CD`, select **Pipeline**
+. Scroll to the **Pipeline** section, and paste the following:
+
+[source, groovy]
+----
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git 'https://github.com/bobbyiliev/python-flask-app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("flask-app:latest")
+                }
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                script {
+                    sh 'docker rm -f flask-app || true'
+                    dockerImage.run('-d -p 5000:5000 --name flask-app')
+                }
+            }
+        }
+    }
+}
+----
+
+== Step 6: Run and Verify
+
+. Click **Build Now** to start the pipeline.
+. After success, open **port 5000**.
+. You should see the Flask app message: _"Hello from Jenkins + Docker!"_
+
+== Bonus
+
+- Add a GitHub webhook for automatic deploy on push.
+- Add a test stage or health check.
+- Try deploying using `docker-compose`.
+
+== Cleanup
+
+[source, bash]
+----
+docker stop jenkins
+docker rm jenkins
+docker volume rm jenkins-data
+docker rm -f flask-app
+----
+
+== Summary
+
+You’ve set up a complete CI/CD pipeline using Jenkins in Docker, all inside a single container host on Play with Docker. This simulates real-world CI/CD workflows in a lightweight, easy-to-replicate environment.
+

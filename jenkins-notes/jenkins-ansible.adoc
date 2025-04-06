@@ -1,0 +1,155 @@
+= Jenkins + Ansible CI/CD Lab (Single Instance on Play with Docker)
+:author: DevOps Workshop
+:revdate: 2025-04-07
+:icons: font
+:toc: left
+:toclevels: 2
+
+== Objective
+
+In this lab, you will:
+
+- Set up Jenkins using Docker on Play with Docker (PWD)
+- Install and use Ansible inside the Jenkins container
+- Clone a Flask app from GitHub
+- Use Ansible to build and run the app using raw Docker CLI commands
+- Access the app on a browser
+
+NOTE: This lab uses core Ansible modules only — no `community.docker` collection required.
+
+== Prerequisites
+
+- Docker Hub account (for PWD login)
+- Basic knowledge of Docker, Jenkins, and Ansible
+- GitHub account (optional if using public repo)
+
+== Step 1: Start Jenkins in PWD
+
+Go to https://labs.play-with-docker.com/, log in with Docker Hub, and create a new instance.
+
+Run the following in the terminal:
+
+[source, bash]
+----
+docker volume create jenkins-data
+
+docker run -d \
+  -p 8080:8080 -p 50000:50000 \
+  -v jenkins-data:/var/jenkins_home \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  --name jenkins \
+  jenkins/jenkins:lts
+----
+
+== Step 2: Unlock Jenkins
+
+Check Jenkins logs and get the admin password:
+
+[source, bash]
+----
+docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+----
+
+Go to the exposed port `8080`, paste the password, install suggested plugins, and create your admin user.
+
+== Step 3: Install Ansible Inside Jenkins Container
+
+[source, bash]
+----
+docker exec -it jenkins bash
+apt update && apt install -y ansible
+exit
+----
+
+== Step 4: Create the Ansible Playbook
+
+Create a file named `deploy.yml` in the Jenkins container’s home directory (`/var/jenkins_home`):
+
+[source, yaml]
+----
+- name: Deploy Flask app using Docker CLI
+  hosts: localhost
+  connection: local
+  tasks:
+
+    - name: Clone the Flask GitHub repo
+      shell: |
+        rm -rf /tmp/flask-app
+        git clone https://github.com/bobbyiliev/python-flask-app.git /tmp/flask-app
+
+    - name: Build Docker image
+      shell: |
+        docker build -t flask-app:latest /tmp/flask-app
+
+    - name: Stop existing container (if any)
+      shell: |
+        docker rm -f flask-app || true
+
+    - name: Run the container
+      shell: |
+        docker run -d -p 5000:5000 --name flask-app flask-app:latest
+----
+
+== Step 5: Create Jenkins Pipeline Job
+
+. Go to Jenkins dashboard → *New Item*
+. Name it `Flask-Ansible-Deploy`
+. Choose *Pipeline* → OK
+. Scroll down to *Pipeline Script* section and paste:
+
+[source, groovy]
+----
+pipeline {
+    agent any
+
+    stages {
+        stage('Install Ansible (if needed)') {
+            steps {
+                sh 'which ansible || (apt update && apt install -y ansible)'
+            }
+        }
+
+        stage('Run Ansible Playbook') {
+            steps {
+                sh 'ansible-playbook /var/jenkins_home/deploy.yml'
+            }
+        }
+    }
+}
+----
+
+Save the pipeline.
+
+== Step 6: Run and Verify
+
+. Click **Build Now**
+. Wait for the pipeline to finish
+. Click **Open Port** and choose port **5000**
+. You should see the message: _"Hello from Jenkins + Docker!"_
+
+== Cleanup
+
+To remove everything:
+
+[source, bash]
+----
+docker rm -f jenkins flask-app
+docker volume rm jenkins-data
+----
+
+== Summary
+
+You've now set up a Jenkins job that uses Ansible (without any external dependencies) to automate:
+
+- Cloning source code
+- Building a Docker image
+- Deploying a container
+
+All on a single instance inside Play with Docker.
+
+== Resources
+
+- GitHub Repo: https://github.com/bobbyiliev/python-flask-app
+- Jenkins Docker Image: https://hub.docker.com/r/jenkins/jenkins
+
+

@@ -1,0 +1,200 @@
+Absolutely! Here’s the **complete AsciiDoc** file combining:
+
+✅ Setting up Alpine on Play with Docker  
+✅ Installing tools  
+✅ Cloning and building the Spring PetClinic app  
+✅ Writing and using a `Dockerfile`  
+✅ Running the app in Docker  
+
+---
+
+### 📘 `petclinic-alpine-docker.adoc`
+
+```asciidoc
+= Full Lab: Deploy Spring PetClinic with Docker on Alpine (Play with Docker)
+Author: MCA DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: pygments
+:sectnums:
+
+== 🎯 Objective
+
+This lab guides you to:
+- Configure an Alpine Linux environment on Play with Docker (PWD)
+- Install Java 17, Maven, Git
+- Clone and build the Spring PetClinic app
+- Create a Dockerfile
+- Build and run the app in a Docker container
+
+== 🧪 Environment
+
+- Platform: https://labs.play-with-docker.com
+- Alpine Linux instance (from PWD)
+- Internet access inside container (provided by PWD)
+- Docker is pre-installed in the PWD instance
+
+== 🐧 Step 1: Launch Alpine on Play with Docker
+
+. Visit https://labs.play-with-docker.com
+. Start a session, then click `+ ADD NEW INSTANCE`
+. Choose **Alpine** as your image
+. Open the Alpine terminal
+
+== 🔧 Step 2: Install Required Tools
+
+[source,bash]
+----
+apk update
+apk add git openjdk17 maven curl wget unzip bash
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+|Command | Description
+
+| `apk update` | Updates the Alpine package list
+| `apk add ...` | Installs Git, Java 17, Maven, Curl, etc.
+|===
+
+== ✅ Step 3: Verify Installations
+
+Run the following commands to ensure all tools are available:
+
+[source,bash]
+----
+java -version
+mvn -version
+git --version
+----
+
+== 🧬 Step 4: Clone the Spring PetClinic Repo
+
+[source,bash]
+----
+git clone https://github.com/spring-projects/spring-petclinic.git
+cd spring-petclinic
+----
+
+== ⚙️ Step 5: Build the Application
+
+Use Maven to compile the source and package it:
+
+[source,bash]
+----
+mvn clean package -DskipTests
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| `mvn clean` | Clears previously compiled files
+| `mvn package -DskipTests` | Builds a JAR file, skipping unit tests
+|===
+
+== 📂 Step 6: Verify the JAR File
+
+[source,bash]
+----
+ls target/
+----
+
+You should see a file like:
+
+```
+spring-petclinic-3.1.0-SNAPSHOT.jar
+```
+
+== 📦 Step 7: Create a Dockerfile
+
+Still inside the `spring-petclinic` directory, create a new file called `Dockerfile`:
+
+[source,dockerfile]
+----
+FROM openjdk:17
+COPY target/spring-petclinic-3.1.0-SNAPSHOT.jar app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+----
+
+=== Dockerfile Explained
+
+[cols="1,3", options="header"]
+|===
+|Line | Description
+
+| `FROM openjdk:17` | Base image with Java 17 runtime
+| `COPY target/... app.jar` | Copies the built JAR into the container
+| `EXPOSE 8080` | Exposes port 8080 for external access
+| `CMD [...]` | Starts the application using Java
+|===
+
+== 🏗️ Step 8: Build the Docker Image
+
+[source,bash]
+----
+docker build -t petclinic-app .
+----
+
+=== Explanation
+
+- `-t petclinic-app` = tag the image
+- `.` = use current directory (where the Dockerfile is)
+
+== 🚀 Step 9: Run the PetClinic Container
+
+[source,bash]
+----
+docker run -d -p 8080:8080 --name petclinic petclinic-app
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| `-d` | Detached mode (runs in background)
+| `-p 8080:8080` | Maps host port 8080 to container port 8080
+| `--name petclinic` | Assigns a name to the container
+| `petclinic-app` | Image name to run
+|===
+
+== 🔍 Step 10: Test It
+
+In your browser, open:
+
+```
+http://<node-public-ip>:8080
+```
+
+(Use the public IP provided by Play with Docker for your Alpine node.)
+
+== 🧼 Cleanup (Optional)
+
+[source,bash]
+----
+docker rm -f petclinic
+----
+
+== 📌 Summary
+
+You have successfully:
+- Set up Alpine with Java, Maven, Git
+- Cloned and built the Spring PetClinic app
+- Packaged it using a Dockerfile
+- Deployed and verified the app via Docker
+
+== 🚀 Bonus: Automate This with Ansible?
+
+Check out the follow-up lab to automate this using Ansible to:
+- Build the app on one node
+- Transfer to a second node
+- Deploy with Docker remotely
+
+```
+
+---
+
+Let me know if you'd like the **Ansible automation version** to go along with this or need it as a downloadable `.adoc` file!
