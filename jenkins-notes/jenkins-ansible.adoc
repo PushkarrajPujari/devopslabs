@@ -1,155 +1,165 @@
-= Jenkins + Ansible CI/CD Lab (Single Instance on Play with Docker)
+= Spring PetClinic Deployment using Jenkins, Ansible, and Docker
 :author: DevOps Workshop
 :revdate: 2025-04-07
 :icons: font
-:toc: left
-:toclevels: 2
 
-== Objective
+This guide walks through the process of automating the deployment of the Spring PetClinic application using Jenkins, Ansible, and Docker on a Play with Docker (PWD) Alpine environment.
 
-In this lab, you will:
+== 🛠️ Environment Setup on Jenkins Host
 
-- Set up Jenkins using Docker on Play with Docker (PWD)
-- Install and use Ansible inside the Jenkins container
-- Clone a Flask app from GitHub
-- Use Ansible to build and run the app using raw Docker CLI commands
-- Access the app on a browser
+Since Play with Docker (PWD) nodes come preinstalled with Docker, we did **not** install Docker manually.
 
-NOTE: This lab uses core Ansible modules only — no `community.docker` collection required.
+We prepared the Alpine environment for Jenkins and Ansible with the following script:
 
-== Prerequisites
-
-- Docker Hub account (for PWD login)
-- Basic knowledge of Docker, Jenkins, and Ansible
-- GitHub account (optional if using public repo)
-
-== Step 1: Start Jenkins in PWD
-
-Go to https://labs.play-with-docker.com/, log in with Docker Hub, and create a new instance.
-
-Run the following in the terminal:
-
-[source, bash]
+[source,sh]
 ----
-docker volume create jenkins-data
+#!/bin/sh
 
-docker run -d \
-  -p 8080:8080 -p 50000:50000 \
-  -v jenkins-data:/var/jenkins_home \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  --name jenkins \
-  jenkins/jenkins:lts
+echo "Updating package index..."
+apk update
+
+echo "Installing required packages: git, OpenJDK 17, Maven, curl, wget, unzip, bash..."
+apk add git openjdk17 maven curl wget unzip bash
+
+echo "Downloading latest stable Jenkins WAR file..."
+wget http://mirrors.jenkins.io/war-stable/latest/jenkins.war
+
+echo "Installing font packages required for Jenkins UI..."
+apk add --no-cache fontconfig ttf-dejavu
+
+echo "Starting Jenkins in background with logs written to jenkins.log..."
+nohup java -jar jenkins.war --httpPort=8080 > jenkins.log 2>&1 &
+
+echo "Jenkins is starting... Tail the log with: tail -f jenkins.log"
 ----
 
-== Step 2: Unlock Jenkins
+Additionally, we installed the following tools for deployment and automation:
 
-Check Jenkins logs and get the admin password:
-
-[source, bash]
+[source,sh]
 ----
-docker exec jenkins cat /var/jenkins_home/secrets/initialAdminPassword
+apk add ansible openssh python3
 ----
 
-Go to the exposed port `8080`, paste the password, install suggested plugins, and create your admin user.
+== 📁 Ansible Configuration
 
-== Step 3: Install Ansible Inside Jenkins Container
+An Ansible folder was created at the root of the Jenkins node:
 
-[source, bash]
+[source,sh]
 ----
-docker exec -it jenkins bash
-apt update && apt install -y ansible
-exit
+mkdir /root/ansible
+cd /root/ansible
 ----
 
-== Step 4: Create the Ansible Playbook
+=== Inventory File: `inventory.ini`
 
-Create a file named `deploy.yml` in the Jenkins container’s home directory (`/var/jenkins_home`):
-
-[source, yaml]
+[source,ini]
 ----
-- name: Deploy Flask app using Docker CLI
-  hosts: localhost
-  connection: local
+[remote]
+remote-node ansible_host=192.168.0.13 ansible_user=root ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+----
+
+=== Playbook: `deploy-petclinic-with-jar.yml`
+
+[source,yaml]
+----
+
+- name: Deploy PetClinic to remote node
+  hosts: remote
+  become: true
   tasks:
+    - name: Create deployment directory on remote
+      file:
+        path: /root/petclinic-deploy/target
+        state: directory
 
-    - name: Clone the Flask GitHub repo
-      shell: |
-        rm -rf /tmp/flask-app
-        git clone https://github.com/bobbyiliev/python-flask-app.git /tmp/flask-app
+    - name: Copy built JAR to remote
+      copy:
+        src: /root/.jenkins/workspace/spring-app-ansible/spring-petclinic/target/spring-petclinic-3.4.0-SNAPSHOT.jar
+        dest: /root/petclinic-deploy/target/spring-petclinic-3.4.0-SNAPSHOT.jar
 
-    - name: Build Docker image
-      shell: |
-        docker build -t flask-app:latest /tmp/flask-app
+    - name: Copy Dockerfile from project to remote
+      copy:
+        src: /root/.jenkins/workspace/spring-app-ansible/spring-petclinic/Dockerfile
+        dest: /root/petclinic-deploy/Dockerfile
 
-    - name: Stop existing container (if any)
+    - name: Build Docker image on remote
       shell: |
-        docker rm -f flask-app || true
+        cd /root/petclinic-deploy
+        docker build -t petclinic-app .
 
-    - name: Run the container
+    - name: Run Docker container on remote
       shell: |
-        docker run -d -p 5000:5000 --name flask-app flask-app:latest
+        docker rm -f petclinic || true
+        docker run -d -p 8080:8080 --name petclinic petclinic-app
 ----
 
-== Step 5: Create Jenkins Pipeline Job
+== 🤖 Jenkins Pipeline
 
-. Go to Jenkins dashboard → *New Item*
-. Name it `Flask-Ansible-Deploy`
-. Choose *Pipeline* → OK
-. Scroll down to *Pipeline Script* section and paste:
+The Jenkins pipeline is configured to:
+1. Clone the Spring PetClinic repo
+2. Build the JAR with Maven
+3. Deploy to a remote Docker host via Ansible
 
-[source, groovy]
+=== Jenkinsfile
+
+[source,groovy]
 ----
 pipeline {
     agent any
 
+    environment {
+        PROJECT_DIR = "spring-petclinic"
+        JAR_PATH = "${PROJECT_DIR}/target/spring-petclinic-3.4.0-SNAPSHOT.jar"
+        REMOTE_DEPLOY_DIR = "/root/petclinic-deploy"
+        ANSIBLE_DIR = "/root/ansible"
+        INVENTORY_FILE = "${ANSIBLE_DIR}/inventory.ini"
+        PLAYBOOK_FILE = "${ANSIBLE_DIR}/deploy-petclinic-with-jar.yml"
+    }
+
     stages {
-        stage('Install Ansible (if needed)') {
+        stage('Clone Repository') {
             steps {
-                sh 'which ansible || (apt update && apt install -y ansible)'
+                dir(PROJECT_DIR) {
+                    git branch: 'main', url: 'https://github.com/PushkarrajPujari/spring-petclinic.git'
+                }
             }
         }
 
-        stage('Run Ansible Playbook') {
+        stage('Build JAR with Maven') {
             steps {
-                sh 'ansible-playbook /var/jenkins_home/deploy.yml'
+                dir(PROJECT_DIR) {
+                   sh "mvn clean package -DskipTests"
+                }
+            }
+        }
+
+        stage('Deploy to Remote via Ansible') {
+            steps {
+                sh "ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOK_FILE}"
             }
         }
     }
 }
 ----
 
-Save the pipeline.
+== ✅ Output
 
-== Step 6: Run and Verify
+Once deployed, the PetClinic app will be available at the remote host's IP on port `8080`.
 
-. Click **Build Now**
-. Wait for the pipeline to finish
-. Click **Open Port** and choose port **5000**
-. You should see the message: _"Hello from Jenkins + Docker!"_
+Example: http://192.168.0.13:8080
 
-== Cleanup
+== 🧹 Cleanup (Optional)
 
-To remove everything:
+To stop and remove the container:
 
-[source, bash]
+[source,sh]
 ----
-docker rm -f jenkins flask-app
-docker volume rm jenkins-data
+docker rm -f petclinic
 ----
 
-== Summary
+== 📌 Notes
 
-You've now set up a Jenkins job that uses Ansible (without any external dependencies) to automate:
-
-- Cloning source code
-- Building a Docker image
-- Deploying a container
-
-All on a single instance inside Play with Docker.
-
-== Resources
-
-- GitHub Repo: https://github.com/bobbyiliev/python-flask-app
-- Jenkins Docker Image: https://hub.docker.com/r/jenkins/jenkins
-
+- Docker comes pre-installed in PWD Alpine nodes.
+- SSH access between nodes is handled using Ansible's configuration to skip host key checks.
+- Jenkins was launched using the WAR file without any additional service manager.
 
