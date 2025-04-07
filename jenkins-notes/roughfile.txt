@@ -13,13 +13,13 @@ $ cat deploy-petclinic-with-jar.yml
   tasks:
     - name: Create deployment directory on remote
       file:
-        path: /root/petclinic-deploy
+        path: /root/petclinic-deploy/target
         state: directory
 
     - name: Copy built JAR to remote
       copy:
         src: /root/.jenkins/workspace/spring-app-ansible/spring-petclinic/target/spring-petclinic-3.4.0-SNAPSHOT.jar
-        dest: /root/petclinic-deploy/app.jar
+        dest: /root/petclinic-deploy/target/spring-petclinic-3.4.0-SNAPSHOT.jar
 
     - name: Copy Dockerfile from project to remote
       copy:
