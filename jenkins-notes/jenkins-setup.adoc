@@ -1,0 +1,88 @@
+= Setting up Jenkins on Play with Docker (Alpine)
+Author: Your Name
+:icons: font
+:source-highlighter: highlightjs
+:sectnums:
+
+== Introduction
+
+This guide provides step-by-step instructions to manually set up Jenkins on _Play with Docker_ using an Alpine Linux environment. It installs necessary packages, fetches the Jenkins WAR file, resolves font issues, and runs Jenkins in the background with logging.
+
+== Prerequisites
+
+- A Play with Docker session: https://labs.play-with-docker.com
+- A running Alpine Linux container
+
+== Steps
+
+=== 1. Update Package Index
+
+Run the following command to update the Alpine package repository:
+
+[source,sh]
+----
+apk update
+----
+
+=== 2. Install Required Packages
+
+Install Java 17, Git, Maven, and other essential tools:
+
+[source,sh]
+----
+apk add git openjdk17 maven curl wget unzip bash
+----
+
+=== 3. Download Jenkins WAR File
+
+Download the latest stable Jenkins WAR file:
+
+[source,sh]
+----
+wget http://mirrors.jenkins.io/war-stable/latest/jenkins.war
+----
+
+=== 4. Fix Missing Fonts Issue
+
+Jenkins requires some fonts to render the UI properly. Install them using:
+
+[source,sh]
+----
+apk add --no-cache fontconfig ttf-dejavu
+----
+
+=== 5. Start Jenkins in Background with Logging
+
+Start Jenkins on port 8080 using `nohup` and redirect all logs to `jenkins.log`:
+
+[source,sh]
+----
+nohup java -jar jenkins.war --httpPort=8080 > jenkins.log 2>&1 &
+----
+
+You can tail the logs using:
+
+[source,sh]
+----
+tail -f jenkins.log
+----
+
+== Access Jenkins
+
+Once Jenkins is running, access it through your browser using:
+
+```
+http://<your-play-with-docker-instance-ip>:8080
+```
+
+
+Check the terminal logs or the log file for the initial admin password:
+
+[source,sh]
+----
+cat /root/.jenkins/secrets/initialAdminPassword
+----
+
+== Conclusion
+
+You now have Jenkins running in a minimal Alpine-based container using Play with Docker, with logs saved to a file. You can proceed with installing plugins, setting up jobs, and configuring builds.
