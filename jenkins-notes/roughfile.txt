@@ -1,0 +1,78 @@
+$ cat inventory.ini 
+[remote]
+remote-node ansible_host=192.168.0.13 ansible_user=root ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+
+
+[node1] (local) root@192.168.0.12 ~/ansible
+$ cat deploy-petclinic-with-jar.yml 
+---
+- name: Deploy PetClinic to remote node
+  hosts: remote
+  become: true
+  tasks:
+    - name: Create deployment directory on remote
+      file:
+        path: /root/petclinic-deploy
+        state: directory
+
+    - name: Copy built JAR to remote
+      copy:
+        src: /root/.jenkins/workspace/spring-app-ansible/spring-petclinic/target/spring-petclinic-3.4.0-SNAPSHOT.jar
+        dest: /root/petclinic-deploy/app.jar
+
+    - name: Copy Dockerfile from project to remote
+      copy:
+        src: /root/.jenkins/workspace/spring-app-ansible/spring-petclinic/Dockerfile
+        dest: /root/petclinic-deploy/Dockerfile
+
+    - name: Build Docker image on remote
+      shell: |
+        cd /root/petclinic-deploy
+        docker build -t petclinic-app .
+
+    - name: Run Docker container on remote
+      shell: |
+        docker rm -f petclinic || true
+        docker run -d -p 8080:8080 --name petclinic petclinic-app
+
+
+
+
+pipeline {
+    agent any
+
+    environment {
+        PROJECT_DIR = "spring-petclinic"
+        JAR_PATH = "${PROJECT_DIR}/target/spring-petclinic-3.4.0-SNAPSHOT.jar"
+        REMOTE_DEPLOY_DIR = "/root/petclinic-deploy"
+        ANSIBLE_DIR = "/root/ansible"
+        INVENTORY_FILE = "${ANSIBLE_DIR}/inventory.ini"
+        PLAYBOOK_FILE = "${ANSIBLE_DIR}/deploy-petclinic-with-jar.yml"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                // Clone directly into spring-petclinic directory
+                dir(PROJECT_DIR) {
+                    git branch: 'main', url: 'https://github.com/PushkarrajPujari/spring-petclinic.git'
+                }
+            }
+        }
+
+        stage('Build JAR with Maven') {
+            steps {
+                dir(PROJECT_DIR) {
+                   sh "mvn clean package -DskipTests"
+                }
+            }
+        }
+
+        stage('Deploy to Remote via Ansible') {
+            steps {
+                sh "ansible-playbook -i ${INVENTORY_FILE} ${PLAYBOOK_FILE}"
+            }
+        }
+    }
+}
