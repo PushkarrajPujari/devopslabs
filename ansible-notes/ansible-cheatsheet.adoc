@@ -16,14 +16,16 @@ It uses **YAML** to define automation tasks (called *playbooks*) and works over 
 
 == 🧰 Basic Terminology
 
-| Term         | Meaning                                         |
-|--------------|--------------------------------------------------|
-| Inventory    | A list of managed hosts                         |
-| Module       | The units of work executed by Ansible           |
-| Ad-hoc       | One-line command for quick tasks                |
-| Playbook     | A YAML file describing a set of tasks           |
-| Role         | A structured way of organizing playbooks        |
-| Facts        | Information collected about a system            |
+|===
+| Term      | Meaning
+
+| Inventory | A list of managed hosts
+| Module    | The units of work executed by Ansible
+| Ad-hoc    | One-line command for quick tasks
+| Playbook  | A YAML file describing a set of tasks
+| Role      | A structured way of organizing playbooks
+| Facts     | Information collected about a system
+|===
 
 == 📂 Inventory File Example
 
@@ -95,27 +97,31 @@ ansible web -i hosts -m package -a "name=tree state=present"
 ----
 
 == 📦 Common Modules
+|===
+| Module       | Description                           
 
-| Module       | Description                           |
-|--------------|----------------------------------------|
-| `ping`       | Test connectivity                     |
-| `copy`       | Copy a file to remote host            |
-| `file`       | Create/delete files or directories    |
-| `package`    | Install or remove software packages   |
-| `service`    | Manage system services                |
-| `user`       | Manage user accounts                  |
-| `debug`      | Print variables/debug messages        |
-| `setup`      | Gather facts about the system         |
+| `ping`       | Test connectivity                     
+| `copy`       | Copy a file to remote host            
+| `file`       | Create/delete files or directories    
+| `package`    | Install or remove software packages   
+| `service`    | Manage system services                
+| `user`       | Manage user accounts                  
+| `debug`      | Print variables/debug messages        
+| `setup`      | Gather facts about the system         
+|===
+
 
 == 🛠️ Useful Options
 
-| Option            | Purpose                             |
-|-------------------|-------------------------------------|
-| `-i hosts`        | Specify inventory file              |
-| `-m <module>`     | Use a specific module               |
-| `-a <args>`       | Pass arguments to module            |
-| `--check`         | Dry-run mode                        |
-| `-v / -vvv`       | Verbose output                      |
+|===
+| Option            | Purpose                             
+
+| `-i hosts`        | Specify inventory file              
+| `-m <module>`     | Use a specific module               
+| `-a <args>`       | Pass arguments to module            
+| `--check`         | Dry-run mode                        
+| `-v / -vvv`       | Verbose output                      
+|===
 
 == 📁 Example: Docker + Nginx Playbook
 
