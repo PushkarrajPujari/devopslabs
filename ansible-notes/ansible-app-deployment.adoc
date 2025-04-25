@@ -52,7 +52,7 @@ mvn clean package -DskipTests
 ----
 cat <<EOF > Dockerfile
 FROM openjdk:17
-COPY spring-petclinic-3.1.0-SNAPSHOT.jar app.jar
+COPY spring-petclinic-3.4.0-SNAPSHOT.jar app.jar
 EXPOSE 8080
 CMD ["java", "-jar", "app.jar"]
 EOF
