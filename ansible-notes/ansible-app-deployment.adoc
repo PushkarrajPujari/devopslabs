@@ -85,8 +85,8 @@ Create a file `deploy_petclinic.yml`:
 
     - name: Copy JAR file
       ansible.builtin.copy:
-        src: ./spring-petclinic/target/spring-petclinic-3.1.0-SNAPSHOT.jar
-        dest: /root/petclinic/spring-petclinic-3.1.0-SNAPSHOT.jar
+        src: ./spring-petclinic/target/spring-petclinic-3.4.0-SNAPSHOT.jar
+        dest: /root/petclinic/spring-petclinic-3.4.0-SNAPSHOT.jar
 
     - name: Copy Dockerfile
       ansible.builtin.copy:
