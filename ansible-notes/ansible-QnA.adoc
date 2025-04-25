@@ -1,0 +1,97 @@
+
+= Ansible Interview Questions and Answers
+:author: DevOps Faculty
+:doctype: article
+:toc: left
+:toclevels: 2
+:icons: font
+:sectnums:
+
+== Basic Level
+
+=== 1. What is Ansible?
+
+Ansible is an open-source IT automation tool used for configuration management, application deployment, task automation, and multi-node orchestration. It is agentless and uses SSH for communication.
+
+=== 2. What are the key features of Ansible?
+
+* Agentless architecture
+* Simple, YAML-based playbooks
+* Idempotent operations
+* Uses SSH for connectivity
+* Extensible with custom modules
+
+=== 3. What is an Ansible playbook?
+
+A playbook is a YAML file containing a list of tasks to be executed on managed nodes. It defines what needs to be done on which hosts.
+
+=== 4. What is the difference between a playbook and an ad-hoc command?
+
+* Ad-hoc commands are used for quick, one-time tasks.
+* Playbooks are used for repeatable and consistent automation.
+
+=== 5. What is an inventory file?
+
+An inventory file is used to define the list of hosts or groups of hosts on which Ansible will operate. It can be a static file or dynamically generated.
+
+== Intermediate Level
+
+=== 6. What are Ansible modules?
+
+Modules are small programs used by Ansible to perform specific tasks such as installing packages, copying files, or restarting services. Examples: `yum`, `apt`, `copy`, `service`, `ping`.
+
+=== 7. What is a role in Ansible?
+
+Roles are a way to organize playbooks and related files into a structured format. They contain folders like `tasks`, `handlers`, `templates`, `vars`, and `files`.
+
+=== 8. How do you run an Ansible playbook?
+
+Use the following command:
+----
+ansible-playbook playbook.yml
+----
+
+=== 9. What is Ansible Galaxy?
+
+Ansible Galaxy is a community hub where users can find, share, and reuse Ansible roles and collections.
+
+=== 10. How does Ansible ensure idempotency?
+
+Ansible modules are designed to be idempotent, meaning running the same playbook multiple times will not change the system after the first run unless necessary.
+
+== Advanced Level
+
+=== 11. How do you handle secrets in Ansible?
+
+Ansible provides a feature called *Vault* to encrypt secrets like passwords or keys. Use the command:
+----
+ansible-vault encrypt secrets.yml
+----
+
+=== 12. How can you test Ansible roles?
+
+You can use tools like *Molecule* to test Ansible roles in different environments.
+
+=== 13. What is the purpose of the `become` directive?
+
+`become: yes` allows privilege escalation (e.g., sudo) to run tasks as a different user, typically root.
+
+=== 14. How can you execute a task only when a condition is met?
+
+Use the `when` clause:
+----
+- name: Install Apache only on CentOS
+  yum:
+    name: httpd
+    state: present
+  when: ansible_facts['os_family'] == "RedHat"
+----
+
+=== 15. What is the difference between `copy` and `template` modules?
+
+* `copy` simply copies a file.
+* `template` processes a Jinja2 template before copying, allowing dynamic content.
+
+== Conclusion
+
+These questions cover fundamental to advanced concepts in Ansible. Preparing these will help you in interviews and in practical Ansible usage.
