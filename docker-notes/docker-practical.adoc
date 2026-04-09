@@ -67,6 +67,9 @@ docker run -d -p 8080:80 nginx
 ----
 docker volume create mydata
 ----
+----
+docker volume inspect mydata
+----
 
 ❓ *Run BusyBox container with volume attached:*
 
