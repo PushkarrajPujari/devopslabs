@@ -1,0 +1,278 @@
+= 🛠️ Jenkins Installation Guide (Windows, Ubuntu, macOS)
+Author: DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: highlight.js
+:sectnums:
+
+== 🎯 Objective
+
+This guide helps you install Jenkins on:
+
+- Ubuntu (Linux)
+- Windows
+- macOS
+
+By the end, you will:
+- Install Jenkins successfully
+- Access Jenkins UI
+- Complete initial setup
+
+---
+
+== 📌 What is Jenkins?
+
+Jenkins is an open-source automation server used for:
+
+- Continuous Integration (CI)
+- Continuous Delivery (CD)
+- Automating build, test, and deployment pipelines :contentReference[oaicite:1]{index=1}
+
+---
+
+== ⚙️ Prerequisites (All Platforms)
+
+Before installing Jenkins, ensure:
+
+- Java (JDK 11 / 17) installed
+- Minimum 1–2 GB RAM recommended :contentReference[oaicite:2]{index=2}
+- Internet connection
+
+Check Java:
+
+[source,bash]
+----
+java -version
+----
+
+---
+
+== 🐧 Section 1: Install Jenkins on Ubuntu
+
+=== 🔹 Step 1: Update System
+
+[source,bash]
+----
+sudo apt update
+sudo apt upgrade -y
+----
+
+=== 🔹 Step 2: Install Java
+
+[source,bash]
+----
+sudo apt install -y openjdk-17-jdk
+----
+
+Verify:
+
+[source,bash]
+----
+java -version
+----
+
+=== 🔹 Step 3: Add Jenkins Repository
+
+[source,bash]
+----
+curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo tee \
+/usr/share/keyrings/jenkins-keyring.asc > /dev/null
+----
+
+[source,bash]
+----
+echo deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] \
+https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+/etc/apt/sources.list.d/jenkins.list > /dev/null
+----
+
+=== 🔹 Step 4: Install Jenkins
+
+[source,bash]
+----
+sudo apt update
+sudo apt install -y jenkins
+----
+
+=== 🔹 Step 5: Start Jenkins
+
+[source,bash]
+----
+sudo systemctl start jenkins
+sudo systemctl enable jenkins
+----
+
+Check status:
+
+[source,bash]
+----
+sudo systemctl status jenkins
+----
+
+=== 🔹 Step 6: Open Port 8080
+
+[source,bash]
+----
+sudo ufw allow 8080
+----
+
+---
+
+== 🪟 Section 2: Install Jenkins on Windows
+
+=== 🔹 Step 1: Install Java
+
+- Download JDK (11 or 17)
+- Install and set `JAVA_HOME`
+
+=== 🔹 Step 2: Download Jenkins
+
+- Go to: https://www.jenkins.io/download/
+- Download **Windows Installer (.msi)**
+
+=== 🔹 Step 3: Install Jenkins
+
+- Run installer
+- Follow setup wizard
+- Jenkins installs as a **Windows Service** :contentReference[oaicite:3]{index=3}
+
+=== 🔹 Step 4: Access Jenkins
+
+Open browser:
+
+----
+http://localhost:8080
+----
+
+---
+
+== 🍎 Section 3: Install Jenkins on macOS
+
+=== 🔹 Option 1: Using Homebrew (Recommended)
+
+Install Homebrew (if not installed):
+
+[source,bash]
+----
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+----
+
+Install Jenkins:
+
+[source,bash]
+----
+brew install jenkins-lts
+----
+
+Start Jenkins:
+
+[source,bash]
+----
+brew services start jenkins-lts
+----
+
+---
+
+=== 🔹 Option 2: Using WAR File
+
+Download Jenkins:
+
+[source,bash]
+----
+wget https://get.jenkins.io/war-stable/latest/jenkins.war
+----
+
+Run:
+
+[source,bash]
+----
+java -jar jenkins.war
+----
+
+Jenkins runs on:
+
+----
+http://localhost:8080
+----
+
+NOTE: Jenkins WAR runs on any OS with Java installed :contentReference[oaicite:4]{index=4}
+
+---
+
+== 🔐 First-Time Jenkins Setup (All Platforms)
+
+=== 🔹 Step 1: Open Jenkins
+
+----
+http://localhost:8080
+----
+
+=== 🔹 Step 2: Unlock Jenkins
+
+Run:
+
+[source,bash]
+----
+cat /var/lib/jenkins/secrets/initialAdminPassword
+----
+
+(Windows path will be shown in UI)
+
+=== 🔹 Step 3: Install Plugins
+
+- Click: *Install Suggested Plugins*
+
+=== 🔹 Step 4: Create Admin User
+
+- Enter username, password, email
+
+---
+
+== 🧠 Key Concepts
+
+- Jenkins runs on **port 8080 by default**
+- Uses **plugins (1500+) for integrations** :contentReference[oaicite:5]{index=5}
+- Works via:
+  - WAR file
+  - Native packages
+  - Docker
+
+---
+
+== ⚠️ Common Issues
+
+=== ❌ Port 8080 not accessible
+- Check firewall
+- Ensure Jenkins is running
+
+=== ❌ Java not found
+- Install JDK
+- Set PATH correctly
+
+=== ❌ Jenkins not starting
+- Check logs:
+----
+journalctl -u jenkins
+----
+
+---
+
+== 📎 References
+
+- Official Docs: https://www.jenkins.io/doc/book/installing/
+- Ubuntu Guide: https://www.makeuseof.com/install-jenkins-on-ubuntu/
+- Multi-OS Guide: https://automatenow.io/jenkins-installation-guide-windows-mac-and-more/
+
+---
+
+== ✅ Outcome
+
+After completing this guide, you will:
+
+- Have Jenkins running on your system
+- Understand installation across platforms
+- Be ready to create your first CI/CD pipeline
+
+---
+
+🎉 Congratulations! Jenkins is now ready to use.
