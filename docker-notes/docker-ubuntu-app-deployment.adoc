@@ -1,0 +1,388 @@
+= Full Lab: Deploy Spring PetClinic with Docker on Ubuntu
+Author: MCA DevOps Workshop
+:toc:
+:icons: font
+:source-highlighter: pygments
+:sectnums:
+
+== 🎯 Objective
+
+This lab guides you to:
+
+- Set up an Ubuntu Linux environment using Docker or a local VM
+- Install Java 17, Maven, Git
+- Clone and build the Spring PetClinic app
+- Create a Dockerfile
+- Build and run the app in a Docker container
+
+== 🧪 Environment
+
+- Platform: Any Ubuntu 22.04 machine — local VM, Multipass, Docker container, or Killercoda
+- Ubuntu 22.04 LTS instance
+- Internet access inside the instance
+- Docker must be installed (see Step 1 if not already available)
+
+== 🐧 Step 1: Launch an Ubuntu Environment
+
+Choose *one* of the following depending on your setup:
+
+=== Option A: Killercoda (browser-based, no install needed)
+
+. Visit https://killercoda.com/playgrounds/scenario/ubuntu
+. Start the Ubuntu playground — you get a live terminal instantly
+. Docker is pre-installed; skip to Step 2
+
+=== Option B: Multipass (local Ubuntu VM on your laptop)
+
+[source,bash]
+----
+multipass launch --name devlab --cpus 2 --memory 4G --disk 20G
+multipass shell devlab
+----
+
+=== Option C: Docker container as your Ubuntu node
+
+[source,bash]
+----
+docker run -it --privileged ubuntu:22.04 bash
+----
+
+[NOTE]
+====
+For Option C, Docker-in-Docker requires the `--privileged` flag. This is fine for lab purposes but not for production.
+====
+
+== 🔧 Step 2: Install Required Tools
+
+[source,bash]
+----
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y git openjdk-17-jdk maven curl wget unzip
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| Command | Description
+| apt update | Refreshes the Ubuntu package list
+| apt upgrade -y | Upgrades all installed packages to latest versions
+| apt install -y git | Installs Git version control
+| apt install -y openjdk-17-jdk | Installs Java Development Kit 17
+| apt install -y maven | Installs Apache Maven build tool
+| apt install -y curl wget unzip | Installs common download and archive utilities
+|===
+
+[NOTE]
+====
+On Ubuntu, the package manager is `apt` (not `apk` which is Alpine-specific).
+`sudo` is required unless you are already running as root.
+====
+
+== ✅ Step 3: Verify Installations
+
+[source,bash]
+----
+java -version
+mvn -version
+git --version
+docker --version
+----
+
+Expected output for Java:
+
+[source]
+----
+openjdk version "17.0.x" ...
+----
+
+=== Set JAVA_HOME (if needed)
+
+If Maven cannot find Java, set the environment variable explicitly:
+
+[source,bash]
+----
+echo 'export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64' >> ~/.bashrc
+echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bashrc
+source ~/.bashrc
+----
+
+== 🧬 Step 4: Clone the Spring PetClinic Repo
+
+[source,bash]
+----
+git clone https://github.com/spring-projects/spring-petclinic.git
+cd spring-petclinic
+----
+
+== ⚙️ Step 5: Build the Application
+
+Use Maven to compile the source and package it as a JAR:
+
+[source,bash]
+----
+mvn clean package -DskipTests
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| Command | Description
+| mvn clean | Clears previously compiled files from the target/ directory
+| mvn package -DskipTests | Compiles the code and builds a runnable JAR, skipping unit tests for speed
+|===
+
+[NOTE]
+====
+The first build downloads Maven dependencies from the internet and may take 3–5 minutes.
+Subsequent builds are significantly faster due to the local Maven cache (`~/.m2`).
+====
+
+== 📂 Step 6: Verify the JAR File
+
+[source,bash]
+----
+ls target//*.jar
+----
+
+You should see a file like:
+
+[source]
+----
+target/spring-petclinic-3.3.0.jar
+----
+
+[NOTE]
+====
+The version number in the filename may differ depending on when you clone the repo.
+Note the exact filename — you will need it in the next step.
+====
+
+== 📦 Step 7: Create a Dockerfile
+
+Still inside the `spring-petclinic` directory, create a `Dockerfile`:
+
+[source,bash]
+----
+cat > Dockerfile << 'EOF'
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY target/spring-petclinic-*.jar app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+EOF
+----
+
+Or open it in a text editor:
+
+[source,bash]
+----
+nano Dockerfile
+----
+
+Paste the following content:
+
+[source,dockerfile]
+----
+FROM eclipse-temurin:17-jre-jammy
+WORKDIR /app
+COPY target/spring-petclinic-*.jar app.jar
+EXPOSE 8080
+CMD ["java", "-jar", "app.jar"]
+----
+
+=== Dockerfile Explained
+
+[cols="1,3", options="header"]
+|===
+| Line | Description
+| FROM eclipse-temurin:17-jre-jammy | Ubuntu-based Java 17 JRE image (official Adoptium build, lighter than openjdk:17)
+| WORKDIR /app | Sets /app as the working directory inside the container
+| COPY target/spring-petclinic-*.jar app.jar | Copies any matching JAR from target/ into the container as app.jar
+| EXPOSE 8080 | Documents that the app listens on port 8080
+| CMD ["java", "-jar", "app.jar"] | Starts the Spring Boot application
+|===
+
+[NOTE]
+====
+`eclipse-temurin:17-jre-jammy` is the recommended production-grade Java 17 image for Ubuntu (Jammy = 22.04).
+It is smaller than the full JDK image since it only includes the runtime.
+The wildcard `*` in the COPY line means you do not need to hardcode the version number.
+====
+
+== 🔧 Step 7.1: Install Docker on Ubuntu (if not already installed)
+
+If Docker is not present on your Ubuntu instance, install it now:
+
+[source,bash]
+----
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
+
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+sudo apt update
+sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+sudo usermod -aG docker $USER
+newgrp docker
+----
+
+Verify:
+
+[source,bash]
+----
+docker --version
+----
+
+== 🏗️ Step 8: Build the Docker Image
+
+[source,bash]
+----
+docker build -t petclinic-app .
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| Option | Description
+| -t petclinic-app | Tags the image with the name "petclinic-app"
+| . | Uses the current directory as the build context (must contain Dockerfile and target/)
+|===
+
+Watch for the `Successfully tagged petclinic-app:latest` line at the end of the output.
+
+== 🚀 Step 9: Run the PetClinic Container
+
+[source,bash]
+----
+docker run -d -p 8080:8080 --name petclinic petclinic-app
+----
+
+=== Explanation
+
+[cols="1,3", options="header"]
+|===
+| Option | Description
+| -d | Detached mode — runs the container in the background
+| -p 8080:8080 | Maps port 8080 on the host to port 8080 in the container
+| --name petclinic | Assigns a human-readable name to the running container
+| petclinic-app | The image to instantiate
+|===
+
+=== Check the container is running
+
+[source,bash]
+----
+docker ps
+docker logs petclinic
+----
+
+Wait until you see a line like:
+
+[source]
+----
+Started PetClinicApplication in 12.3 seconds
+----
+
+== 🔍 Step 10: Test the Application
+
+=== From the same machine
+
+[source,bash]
+----
+curl http://localhost:8080
+----
+
+A successful response returns HTML from the PetClinic homepage.
+
+=== From a browser
+
+[source]
+----
+http://<your-vm-ip>:8080
+----
+
+Find your machine's IP with:
+
+[source,bash]
+----
+ip a | grep inet
+# or
+hostname -I
+----
+
+[NOTE]
+====
+If using Killercoda, the platform provides a "Traffic Port Accessor" button for port 8080 in the UI.
+If using Multipass, run `multipass info devlab` to get the VM's IP address.
+====
+
+== 🧼 Cleanup (Optional)
+
+Stop and remove the running container:
+
+[source,bash]
+----
+docker stop petclinic
+docker rm petclinic
+----
+
+Remove the built image:
+
+[source,bash]
+----
+docker rmi petclinic-app
+----
+
+Remove all stopped containers and unused images at once:
+
+[source,bash]
+----
+docker system prune -f
+----
+
+== 📌 Summary
+
+You have successfully:
+
+- Set up an Ubuntu environment (Killercoda / Multipass / local VM)
+- Installed Java 17, Maven, and Git using `apt`
+- Cloned and built the Spring PetClinic app with Maven
+- Written a Dockerfile using the Ubuntu-based `eclipse-temurin` image
+- Built a Docker image and deployed it as a running container
+- Verified the app is accessible via browser or curl
+
+=== Key differences from Alpine
+
+[cols="1,1,2", options="header"]
+|===
+| Task | Alpine | Ubuntu
+| Package manager | apk | apt
+| Java package | openjdk17 | openjdk-17-jdk
+| Docker install | pre-installed in PWD | Manual apt install or Docker Desktop
+| Base image for Dockerfile | openjdk:17 | eclipse-temurin:17-jre-jammy
+| JAVA_HOME path | /usr/lib/jvm/java-17-openjdk | /usr/lib/jvm/java-17-openjdk-amd64
+|===
+
+== 🚀 Bonus: Automate This with Ansible
+
+Check out the follow-up lab to automate this entire workflow using Ansible:
+
+- Provision two Ubuntu nodes (via Multipass or Docker containers)
+- Install Java, Maven, and Docker on both nodes using an Ansible playbook
+- Build the app on the control node
+- Transfer the JAR and Dockerfile to a managed node
+- Build and run the container remotely using Ansible's `docker_container` module
+- Trigger the full pipeline automatically from Jenkins
